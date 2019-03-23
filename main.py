@@ -2,11 +2,14 @@ import argparse
 import os
 import yaml
 import tensorflow as tf
-
+from lib.utils import read_files
+from lib.generate_labels import onset
 
 
 def main(config, args):
-    pass
+    data_list = read_files(config)
+    onset_label = onset(config, data_list[0])
+    return 0
 
 
 if __name__ == '__main__':
