@@ -4,6 +4,7 @@ name: dev
 dirs:
     - ENSTDkAm
 path: /Users/sandervandenhaute/Documents/speech/piano/data/
+cache: /Users/sandervandenhaute/Documents/speech/piano/cache/
 files_to_load: 1
 sample_rate: 16000
 spec_hop_length: 512
@@ -14,6 +15,8 @@ channels: 1
 spec_mel_htk: True
 n_fft: 2048
 onset_slack: 50 # allowed slack in onset time (in ms)
+onset_length: 32 # minimum onset time
 length_slack_ms: 50 # allowed slack in note lengths (in ms)
 length_slack_percent: 20 # allowed slack in note lengths (in percentage)
+create_tfrecords: False
 ...

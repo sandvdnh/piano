@@ -1,6 +1,7 @@
 # Exclude files in ./datasets/
 data/*
 cache/*
+logs/*
 *.pdf
 
 # But keep one file, otherwise the directory won't sync

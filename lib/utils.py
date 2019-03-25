@@ -22,19 +22,22 @@ def read_files(config):
     - b: list of intervals from .txt file
     - c: corresponding list of pitches (in MIDI)
     '''
+    print('READING FILES...')
     data_list = []
     dirs = config['dirs'] # list of names of subdirectories in MAPS dataset to be included
     file_list = []
+    names = []
     for _ in dirs:
         path = os.path.join(config['path'], _, 'MUS')
         path = os.path.join(path, '*.wav')
         wav_files = glob.glob(path)
         for wav_file in wav_files:
             name, _ = os.path.splitext(wav_file)
+            names.append(name)
             txt_file = name + '.txt'
             file_list.append((wav_file, txt_file))
         count = 0
-        for pair in file_list:
+        for i, pair in enumerate(file_list):
             if count < config['files_to_load']:
                 # load text
                 contents = np.loadtxt(pair[1], skiprows=1)
@@ -42,14 +45,15 @@ def read_files(config):
                 pitches = midi_to_hz(contents[:, 2])
 
                 # load wav
+                print('processing file {}/{}'.format(i + 1, config['files_to_load']))
                 y, sr = sf.read(pair[0])
-                if sr != config['sample_rate']:
-                    print('Resampling...')
+                y = librosa.core.resample(y.T, orig_sr=sr, target_sr=config['sample_rate']).T
                 if config['channels'] == 1:
                     mel = wav_to_mel(config, y[:, 0])
                 else:
                     print('DUAL CHANNEL NOT IMPLEMENTED')
-                data_list.append((mel, intervals, contents[:, 2]))
+                base_name = os.path.basename(names[i])
+                data_list.append((mel.astype(np.float32), intervals.astype(np.float32), contents[:, 2].astype(np.float32), base_name))
 
                 # increase count
                 count += 1
@@ -68,7 +72,7 @@ def wav_to_mel(config, y):
     Transforms the waveform into a series of mel spectrogram frames
     '''
     mel = librosa.feature.melspectrogram(
-            y,
+            y=y,
             sr=config['sample_rate'],
             hop_length=config['spec_hop_length'],
             fmin=config['spec_fmin'],
