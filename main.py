@@ -9,8 +9,10 @@ def main(config, args):
     dataset = create_dataset(config)
     iterator = dataset.make_one_shot_iterator()
     foo = iterator.get_next()
-    print(*foo)
-
+    with tf.Session() as sess:
+        for i in range(2):
+            bar = sess.run(foo)
+            print(*[bar[i].shape for i in range(len(bar))])
     #input_, ground_truth = iterator.get_next()
     #output = model(input_)
     #loss = create_loss(output, ground_truth)
@@ -24,8 +26,6 @@ def main(config, args):
     #    print(a.shape)
     #    for i in range(3):
     #        _, r_loss = sess.run([train_op, loss])
-
-    
     return 0
 
 

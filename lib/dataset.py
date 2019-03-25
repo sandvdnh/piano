@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.contrib.data.python.ops import sliding
 import os
 import glob
 from .utils import read_files
@@ -31,7 +32,7 @@ def to_tfrecords(config, entry):
     with tf.python_io.TFRecordWriter(path) as writer:
         # create dict
         data_dict = {
-                'name': wrap_bytes(entry['name']),
+                'name': wrap_bytes(entry['name'].encode('utf-8')),
                 'mel': wrap_bytes(entry['mel'].tostring()),
                 'mel_shape': wrap_int64_list(entry['mel'].shape),
                 'onset_labels': wrap_bytes(entry['onset_labels'].tostring()),
@@ -53,7 +54,7 @@ def _parser(record):
     features = {
             'name': tf.FixedLenFeature([1], tf.string),
             'mel': tf.FixedLenFeature([1], tf.string),
-            'mel_shape': tf.FixedLenFeature([2], tf.int64),
+            'mel_shape': tf.FixedLenFeature([3], tf.int64),
             'onset_labels': tf.FixedLenFeature([1], tf.string),
             'onset_shape': tf.FixedLenFeature([2], tf.int64),
             'frame_labels': tf.FixedLenFeature([1], tf.string),
@@ -78,6 +79,18 @@ def _parser(record):
     return mel, onset_labels, frame_labels, weights
 
 
+def _apply_window(mel, onset_labels, frame_labels, weights):
+    '''
+    create dataset from tuple of tensors
+    NOT USED
+    '''
+    dataset = tf.data.Dataset.from_tensor_slices((mel, onset_labels, frame_labels, weights))
+    #dataset = dataset.window(5, 1, 1, True)
+    dataset = dataset.apply(sliding.sliding_window_batch(5, 1))
+    dataset = dataset.batch(1000000)
+    return dataset
+
+
 def create_dataset(config):
     '''
     returns a TFRecordDataset object from #(files_to_load) files from config['path']
@@ -93,5 +106,7 @@ def create_dataset(config):
         filenames = glob.glob(path)
     dataset = tf.data.TFRecordDataset(filenames)
     dataset = dataset.map(_parser)
+    #dataset = dataset.flat_map(_apply_window)
+    #dataset = dataset.batch(100)
     dataset = dataset.repeat()
     return dataset

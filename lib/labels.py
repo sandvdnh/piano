@@ -16,7 +16,7 @@ def onset(config, raw_data):
     pitches = raw_data[2]
 
     n_frames = mel.shape[0]
-    onset_labels = np.zeros((88, n_frames))
+    onset_labels = np.zeros((n_frames, 88))
 
     # convert time axis to samples
     intervals = intervals * config['sample_rate']
@@ -42,9 +42,35 @@ def create_data_entry(config, raw_data):
     '''
     onset_labels = onset(config, raw_data)
     frame_labels, weights = frame(config, raw_data)
+
+    mel = raw_data[0]
+    mel_ = np.zeros((mel.shape[0], 5, mel.shape[1]))
+    fix = np.zeros((2, mel.shape[1]))
+    mel = np.concatenate(
+            (fix, mel, fix),
+            axis = 0)
+
+    for i in range(mel_.shape[0]):
+        mel_[i, :, :] = mel[i : i + 5, :].copy()
+
+    #fix = np.zeros((2, onset_labels.shape[1]))
+    #onset_labels = np.concatenate(
+    #        (fix, onset_labels, fix),
+    #        axis = 0)
+
+    #fix = np.zeros((2, frame_labels.shape[1]))
+    #frame_labels = np.concatenate(
+    #        (fix, frame_labels, fix),
+    #        axis = 0)
+
+    #fix = np.zeros((2, weights.shape[1]))
+    #weights = np.concatenate(
+    #        (fix, weights, fix),
+    #        axis = 0)
+
     entry = {
             'name': raw_data[3],
-            'mel': raw_data[0].astype(np.float32),
+            'mel': mel_.astype(np.float32),
             'onset_labels': onset_labels.astype(np.float32),
             'frame_labels': frame_labels.astype(np.float32),
             'weights': weights.astype(np.float32),
@@ -61,7 +87,7 @@ def frame(config, raw_data):
     pitches = raw_data[2]
 
     n_frames = mel.shape[0]
-    frame_labels = np.zeros((88, n_frames))
+    frame_labels = np.zeros((n_frames, 88))
 
     # convert time axis to samples
     intervals = intervals * config['sample_rate']
@@ -73,5 +99,5 @@ def frame(config, raw_data):
         start = int(np.argmax(frame_samples + config['n_fft'] / 2 > interval[0]))
         stop = int(np.argmax(frame_samples - config['n_fft'] / 2 > interval[1]))
         frame_labels[int(pitches[i] - config['spec_fmin']), start:stop] = 1
-    return frame_labels, 0
+    return frame_labels, np.zeros(frame_labels.shape)
 
