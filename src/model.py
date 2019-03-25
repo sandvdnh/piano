@@ -19,7 +19,7 @@ class Model():
     model class for the neural network
     input:
     - config: config file
-    - input_: input spectrogram tensor
+    - input_: input spectrogram tensor (batch_size, 5, 229, 1)
     - is_training: tf.bool placeholder
     '''
     def __init__(self, config, input_, is_training):
@@ -51,6 +51,62 @@ class Model():
         input: mel spectrogram
         output: tensor of length 88
         '''
-        return output
+        x = input_
+        filter1 = tf.get_variable(
+                'filter1',
+                dtype=tf.float32,
+                shape=[3, 3, 1, 32],
+                initializer=tf.intializers.truncated_normal,
+                trainable=True)
+        x = tf.nn.conv2d(
+                x,
+                filter1,
+                strides=[1, 1, 1, 1],
+                padding='SAME')
+        x = tf.contrib.layers.batch_norm(x)
+        x = tf.nn.relu(x)
+        filter2 = tf.get_variable(
+                'filter2',
+                dtype=tf.float32,
+                shape=[3, 3, 32, 32],
+                initializer=tf.intializers.truncated_normal,
+                trainable=True)
+        x = tf.nn.conv2d(
+                x,
+                filter2,
+                strides=[1, 1, 1, 1],
+                padding='SAME')
+        x = tf.contrib.layers.batch_norm(x)
+        x = tf.nn.relu(x)
+
+        x = tf.nn.max_pool(
+                x,
+                ksize=(1, 2, 2, 1),
+                strides=(1, 2, 2, 1),
+                padding='SAME')
+        x = tf.nn.dropout(
+                x,
+                rate=0.75)
+
+        filter3 = tf.get_variable(
+                'filter3',
+                dtype=tf.float32,
+                shape=[3, 3, 32, 64],
+                initializer=tf.intializers.truncated_normal,
+                trainable=True)
+        x = tf.nn.conv2d(
+                x,
+                filter3,
+                strides=[1, 1, 1, 1],
+                padding='SAME')
+        x = tf.nn.max_pool(
+                x,
+                ksize=(1, 2, 2, 1),
+                strides=(1, 2, 2, 1),
+                padding='SAME')
+        x = tf.nn.dropout(
+                x,
+                rate=0.75)
+        return x
 
 

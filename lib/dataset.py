@@ -67,6 +67,7 @@ def _parser(record):
     mel = tf.decode_raw(parsed['mel'], tf.float32)
     mel_shape = parsed['mel_shape']
     mel = tf.reshape(mel, shape=mel_shape)
+    mel = tf.expand_dims(mel, axis = 3)
     onset_labels = tf.decode_raw(parsed['onset_labels'], tf.float32)
     onset_shape = parsed['onset_shape']
     onset_labels = tf.reshape(onset_labels, shape=onset_shape)
@@ -77,18 +78,6 @@ def _parser(record):
     weights_shape = parsed['weights_shape']
     weights = tf.reshape(weights, shape=weights_shape)
     return mel, onset_labels, frame_labels, weights
-
-
-def _apply_window(mel, onset_labels, frame_labels, weights):
-    '''
-    create dataset from tuple of tensors
-    NOT USED
-    '''
-    dataset = tf.data.Dataset.from_tensor_slices((mel, onset_labels, frame_labels, weights))
-    #dataset = dataset.window(5, 1, 1, True)
-    dataset = dataset.apply(sliding.sliding_window_batch(5, 1))
-    dataset = dataset.batch(1000000)
-    return dataset
 
 
 def create_dataset(config):
@@ -106,7 +95,17 @@ def create_dataset(config):
         filenames = glob.glob(path)
     dataset = tf.data.TFRecordDataset(filenames)
     dataset = dataset.map(_parser)
-    #dataset = dataset.flat_map(_apply_window)
-    #dataset = dataset.batch(100)
     dataset = dataset.repeat()
     return dataset
+
+
+#def _apply_window(mel, onset_labels, frame_labels, weights):
+#    '''
+#    create dataset from tuple of tensors
+#    NOT USED
+#    '''
+#    dataset = tf.data.Dataset.from_tensor_slices((mel, onset_labels, frame_labels, weights))
+#    #dataset = dataset.window(5, 1, 1, True)
+#    dataset = dataset.apply(sliding.sliding_window_batch(5, 1))
+#    dataset = dataset.batch(1000000)
+#    return dataset
