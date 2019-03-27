@@ -3,16 +3,22 @@ import os
 import yaml
 import tensorflow as tf
 from lib.dataset import create_dataset
+from src.model import Model
 
 
 def main(config, args):
     dataset = create_dataset(config)
     iterator = dataset.make_one_shot_iterator()
-    foo = iterator.get_next()
+    mel, onset_labels, frame_labels, weights = iterator.get_next()
+    is_training = tf.constant(True, dtype=tf.bool)
+    model = Model(config, mel, is_training)
+    node = model.onset_output
+
     with tf.Session() as sess:
-        for i in range(2):
-            bar = sess.run(foo)
-            print(*[bar[i].shape for i in range(len(bar))])
+        sess.run(tf.initializers.global_variables())
+        for i in range(1):
+            a = sess.run(node)
+            print(a.shape)
     #input_, ground_truth = iterator.get_next()
     #output = model(input_)
     #loss = create_loss(output, ground_truth)
