@@ -11,14 +11,16 @@ def main(config, args):
     iterator = dataset.make_one_shot_iterator()
     mel, onset_labels, frame_labels, weights = iterator.get_next()
     is_training = tf.constant(True, dtype=tf.bool)
-    model = Model(config, mel, is_training)
-    node = model.onset_output
+    reset_state = False
+    model = Model(config, mel, is_training, reset_state)
+    node = model.conv_x
+    node2 = model.onset_output
 
     with tf.Session() as sess:
         sess.run(tf.initializers.global_variables())
         for i in range(1):
-            a = sess.run(node)
-            print(a.shape)
+            a, b = sess.run([node2, node])
+            print(a.shape, b.shape)
     #input_, ground_truth = iterator.get_next()
     #output = model(input_)
     #loss = create_loss(output, ground_truth)

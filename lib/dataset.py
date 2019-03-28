@@ -95,13 +95,14 @@ def create_dataset(config):
         filenames = glob.glob(path)
     dataset = tf.data.TFRecordDataset(filenames)
     dataset = dataset.map(_parser)
-    dataset = dataset.flat_map(lambda x, y, z, t: _minibatches(x, y, z, t, batch_size=config['batch_size']))
+    dataset = dataset.flat_map(lambda x, y, z, t: _minibatches(x, y, z, t, sequence_length=config['sequence_length']))
+    dataset = dataset.batch(config['batch_size'])
     dataset = dataset.repeat()
     return dataset
 
 
-def _minibatches(mel, onset_labels, frame_labels, weights, batch_size):
+def _minibatches(mel, onset_labels, frame_labels, weights, sequence_length):
     dataset = tf.data.Dataset.from_tensor_slices((mel, onset_labels, frame_labels, weights))
-    dataset = dataset.batch(batch_size)
+    dataset = dataset.batch(sequence_length)
     return dataset
 
