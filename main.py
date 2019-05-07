@@ -5,26 +5,40 @@ import tensorflow as tf
 import numpy as np
 from lib.dataset import create_dataset
 from src.model import Model
+from src.model import Trainer
 
 
 def main(config, args):
     dataset = create_dataset(config)
     iterator = dataset.make_one_shot_iterator()
     mel, onset_labels, frame_labels, weights = iterator.get_next()
-    is_training = tf.placeholder(tf.bool)
-    reset_state = tf.placeholder(tf.bool)
-    model = Model(config, mel, is_training, reset_state)
-    node = model.onset_output
-    node_ = model.frame_output
+    trainer = Trainer(
+            config=config,
+            input_=mel,
+            onset_labels=onset_labels,
+            frame_labels=frame_labels,
+            weights=None)
+    trainer.train()
+
+#    is_training = tf.placeholder(tf.bool)
+#    reset_state = tf.placeholder(tf.bool)
+#    model = Model(config, mel, is_training, reset_state)
+#    node = model.onset_output
+#    node_ = model.frame_output
 
 
-    with tf.Session() as sess:
-        feed = {is_training: True, reset_state: False}
-        sess.run(tf.initializers.global_variables())
-        for i in range(1):
-            a, b = sess.run([node, node_], feed_dict=feed)
-            print(a.shape, b.shape)
-            #print(*[_.shape for _ in a])
+    #with tf.Session() as sess:
+    #    feed = {is_training: True, reset_state: False}
+    #    sess.run(tf.initializers.global_variables())
+    #    for i in range(1):
+    #        a, b, c, d = sess.run([mel, onset_labels, frame_labels, weights], feed_dict=feed)
+    #        print(a.shape)
+    #        print(b.shape)
+    #        print(c.shape)
+    #        print(d.shape)
+    #        e, f = sess.run([node, node_], feed_dict=feed)
+    #        print(e.shape)
+    #        print(f.shape)
     #input_, ground_truth = iterator.get_next()
     #output = model(input_)
     #loss = create_loss(output, ground_truth)

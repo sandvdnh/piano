@@ -5,13 +5,85 @@ from __future__ import print_function
 import tensorflow as tf
 import os
 import glob
+from lib.utils import frame_metrics
+import functools
+#from mir_eval.multipitch import metrics
 
 class Trainer():
-    def __init__():
-        pass
+    '''
+    trainer class for the neural network
+    '''
+    def __init__(self, config, input_, onset_labels, frame_labels, weights=None):
+        self.is_training = tf.placeholder(tf.bool)
+        self.reset_state = tf.placeholder(tf.bool)
+        self.model = Model(config, input_, self.is_training, self.reset_state)
+        self.input_ = input_
+        self.onset_output = self.model.onset_output
+        self.frame_output = self.model.frame_output
+        self.onset_labels = onset_labels
+        self.frame_labels = frame_labels
+        self.weights = weights
+        self.loss = self._get_losses()
+        decay = functools.partial(
+                tf.train.exponential_decay,
+                decay_steps=10000, # constant defined in hparams
+                decay_rate=0.98, # constant defined in hparams
+                staircase=True)
+        self.train_op = tf.contrib.layers.optimize_loss(
+                loss=self.loss,
+                global_step=tf.train.get_or_create_global_step(),
+                learning_rate=self.model.config['learning_rate'],
+                learning_rate_decay_fn=decay,
+                clip_gradients=self.model.config['clip_norm'],
+                optimizer='Adam')
 
-    def build_trainer():
-        pass
+    def train(self):
+        '''
+        trains
+        '''
+        feed = {self.is_training: True, self.reset_state: False}
+        iters = self.model.config['iters']
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            for i in range(iters):
+                _, loss_, accuracy, mel = sess.run([self.train_op, self.loss, self._get_accuracy(), self.input_], feed_dict=feed)
+                if i % self.model.config['verbose'] == 0:
+                    #accuracy = sess.run([self._get_accuracy()])
+                    print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
+                    print('input: ', mel[0, 0, 0, 0, 0])
+        return 0
+
+
+    def _get_accuracy(self):
+        '''
+        Returns the mean accuracy of the current batch
+        '''
+        onset_predictions = tf.to_int32(self.onset_output > self.model.config['threshold'])
+        frame_predictions = tf.to_int32(self.frame_output > self.model.config['threshold'])
+        onset_dict = frame_metrics(self.onset_labels, onset_predictions)
+        frame_dict = frame_metrics(self.frame_labels, frame_predictions)
+        return frame_dict['accuracy']
+
+    def _get_losses(self):
+        '''
+        builds losses and saves them in self.loss
+        '''
+        eps = self.model.config['loss_epsilon']
+        onset_loss = Trainer._log_loss(self.onset_output, self.onset_labels, self.weights, eps)
+        frame_loss = Trainer._log_loss(self.frame_output, self.frame_labels, self.weights, eps)
+        return onset_loss + frame_loss
+
+    def _log_loss(output, labels, weights, eps):
+        '''
+        calculates the mean, weighted log loss
+        '''
+        output = tf.to_float(output)
+        labels = tf.to_float(labels)
+        labels.get_shape().assert_is_compatible_with(labels.get_shape()) # assert same shape
+        loss = -tf.multiply(labels, tf.log(output + eps)) - tf.multiply(1 - labels, tf.log(1 - output + eps))
+        if weights is not None:
+            loss = tf.multiply(loss, weights)
+        return tf.reduce_mean(loss)
 
 
 class Model():
@@ -28,7 +100,6 @@ class Model():
         self.reset_state = reset_state
         batch_size = config['batch_size']
         units = self.config['lstm_units']
-        #self.input = input_
 
 
         self.c_fw = tf.zeros([batch_size, units])
@@ -61,6 +132,9 @@ class Model():
                 88,
                 activation_fn=tf.nn.sigmoid,
                 weights_initializer=tf.initializers.truncated_normal)
+
+        x = tf.concat([x, tf.stop_gradient(onset_output)], axis=2) # concatenate onset predictions
+        #print(x)
 
         lstm_fw = tf.keras.layers.LSTM(
                 units=units,
@@ -109,8 +183,8 @@ class Model():
                     (self.h_bw_frames, self.c_bw_frames),
                     training=self.is_training)
         # FRAMES
-        output = tf.concat([outputs_fw, outputs_bw], axis=2)
-        frame_output = tf.concat([output, onset_output], axis=2)
+        frame_output = tf.concat([outputs_fw, outputs_bw], axis=2)
+        #frame_output = tf.concat([frame_output, onset_output], axis=2)
         frame_output = tf.contrib.layers.fully_connected(
                 frame_output,
                 88,
@@ -266,8 +340,6 @@ class Model():
 
             x_shape = tf.shape(x)
             x = tf.reshape(x, shape=[x_shape[0], x_shape[1] * x_shape[2] * x_shape[3]])
-
-            # assert x_shape[1] == 1? 
 
             x = tf.contrib.layers.fully_connected(
                     x,
