@@ -93,7 +93,7 @@ def create_dataset(config):
     else:
         path = os.path.join(config['cache'], '*.tfrecords')
         filenames = glob.glob(path)
-    dataset = tf.data.TFRecordDataset(filenames)
+    dataset = tf.data.TFRecordDataset(filenames[:config['files_to_load']])
     dataset = dataset.map(_parser)
     dataset = dataset.flat_map(lambda x, y, z, t: _minibatches(x, y, z, t, sequence_length=config['sequence_length']))
     dataset = dataset.batch(config['batch_size'])
