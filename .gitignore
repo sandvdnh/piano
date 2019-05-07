@@ -3,6 +3,7 @@ data/*
 cache/*
 logs/*
 *.pdf
+config/*
 
 # But keep one file, otherwise the directory won't sync
 !data/readme
