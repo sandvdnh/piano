@@ -50,7 +50,6 @@ class Trainer():
                 if i % self.model.config['verbose'] == 0:
                     #accuracy = sess.run([self._get_accuracy()])
                     print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
-                    print('input: ', mel[0, 0, 0, 0, 0])
         return 0
 
 

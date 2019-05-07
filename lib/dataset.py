@@ -97,7 +97,7 @@ def create_dataset(config):
     dataset = dataset.map(_parser)
     dataset = dataset.flat_map(lambda x, y, z, t: _minibatches(x, y, z, t, sequence_length=config['sequence_length']))
     dataset = dataset.batch(config['batch_size'])
-    dataset = dataset.repeat()
+    #dataset = dataset.repeat()
     return dataset
 
 
