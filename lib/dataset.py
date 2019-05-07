@@ -90,6 +90,7 @@ def create_dataset(config):
         for raw_entry in data_list:
             entry = create_data_entry(config, raw_entry)
             filenames.append(to_tfrecords(config, entry))
+            print('creating tfrecords')
     else:
         path = os.path.join(config['cache'], '*.tfrecords')
         filenames = glob.glob(path)
