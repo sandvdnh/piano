@@ -50,7 +50,7 @@ class Trainer():
                 if i % self.model.config['verbose'] == 0:
                     #accuracy = sess.run([self._get_accuracy()])
                     print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
-                    print(sess.run(tf.trainable_vars()))
+                    print(sess.run(tf.trainable_variables()))
         return 0
 
 
