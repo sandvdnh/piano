@@ -1,11 +1,11 @@
 import argparse
 import os
 import yaml
-import tensorflow as tf
 import numpy as np
 from lib.dataset import create_dataset
 from src.model import Model
 from src.model import Trainer
+import tensorflow as tf
 
 
 def main(config, args):

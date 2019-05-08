@@ -7,9 +7,8 @@ import glob
 import os
 import librosa
 import soundfile as sf
-import tensorflow as tf
-
 from scipy.io.wavfile import read
+import tensorflow as tf
 
 
 def read_files(config):

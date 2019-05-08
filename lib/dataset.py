@@ -3,12 +3,12 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.contrib.data.python.ops import sliding
 import os
 import glob
 from .utils import read_files
 from .labels import create_data_entry
+from tensorflow.contrib.data.python.ops import sliding
+import tensorflow as tf
 
 
 def wrap_int64(value):

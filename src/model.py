@@ -2,11 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
 import os
 import glob
 from lib.utils import frame_metrics
 import functools
+import tensorflow as tf
 #from mir_eval.multipitch import metrics
 
 class Trainer():
