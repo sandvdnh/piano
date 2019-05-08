@@ -12,6 +12,17 @@ def main(config, args):
     dataset = create_dataset(config)
     iterator = dataset.make_one_shot_iterator()
     mel, onset_labels, frame_labels, weights = iterator.get_next()
+    with tf.Session() as sess:
+        a = sess.run(mel)
+        print(a.shape)
+        a = sess.run(mel)
+        print(a.shape)
+        a = sess.run(mel)
+        print(a.shape)
+        a = sess.run(mel)
+        print(a.shape)
+        a = sess.run(mel)
+        print(a.shape)
     trainer = Trainer(
             config=config,
             input_=mel,
@@ -19,6 +30,7 @@ def main(config, args):
             frame_labels=frame_labels,
             weights=None)
     trainer.train()
+
 
 #    is_training = tf.placeholder(tf.bool)
 #    reset_state = tf.placeholder(tf.bool)
