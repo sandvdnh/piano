@@ -50,6 +50,7 @@ class Trainer():
                 if i % self.model.config['verbose'] == 0:
                     #accuracy = sess.run([self._get_accuracy()])
                     print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
+                    print(sess.run(tf.trainable_vars()))
         return 0
 
 
@@ -70,7 +71,8 @@ class Trainer():
         eps = self.model.config['loss_epsilon']
         onset_loss = Trainer._log_loss(self.onset_output, self.onset_labels, self.weights, eps)
         frame_loss = Trainer._log_loss(self.frame_output, self.frame_labels, self.weights, eps)
-        return onset_loss + frame_loss
+        loss = onset_loss + frame_loss
+        return loss
 
     def _log_loss(output, labels, weights, eps):
         '''
