@@ -105,6 +105,6 @@ def create_dataset(config):
 
 def _minibatches(mel, onset_labels, frame_labels, weights, sequence_length):
     dataset = tf.data.Dataset.from_tensor_slices((mel, onset_labels, frame_labels, weights))
-    dataset = dataset.batch(sequence_length)
+    dataset = dataset.batch(sequence_length, drop_remained=True)
     return dataset
 
