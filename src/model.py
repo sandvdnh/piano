@@ -59,6 +59,7 @@ class Trainer():
                     print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
                     print('mean frame output: ', np.mean(frame_output))
                     print('mean frame label: ', np.mean(frame_labels))
+                    print('all frame labels zero? ', not np.any(frame_labels))
                     #print(sess.run(tf.trainable_variables()))
             self.saver.save(sess, './tmp/model.ckpt')
         return 0
