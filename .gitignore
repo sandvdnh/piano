@@ -1,6 +1,7 @@
 # Exclude files in ./datasets/
 data/*
 cache/*
+test/*
 logs/*
 *.pdf
 config/*
@@ -8,3 +9,4 @@ config/*
 # But keep one file, otherwise the directory won't sync
 !data/readme
 !cache/readme
+!test/readme
