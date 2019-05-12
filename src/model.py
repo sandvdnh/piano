@@ -52,11 +52,12 @@ class Trainer():
             sess.run(tf.global_variables_initializer())
             sess.run(init_train_iterator)
             for i in range(iters):
-                _, loss_, accuracy, mel, frame_output = sess.run([self.train_op, self.loss, self.accuracy, self.input_, self.frame_output], feed_dict=feed)
+                _, loss_, accuracy, mel, frame_output, frame_labels = sess.run([self.train_op, self.loss, self.accuracy, self.input_, self.frame_output, self.frame_labels], feed_dict=feed)
                 if i % self.model.config['verbose'] == 0:
                     #accuracy = sess.run([self._get_accuracy()])
                     print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
                     print('mean frame output: ', np.mean(frame_output))
+                    print('mean frame label: ', np.mean(frame_labels))
                     #print(sess.run(tf.trainable_variables()))
         return 0
 
