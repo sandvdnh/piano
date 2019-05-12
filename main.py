@@ -9,8 +9,10 @@ import tensorflow as tf
 
 
 def main(config, args):
-    dataset = create_dataset(config)
-    iterator = dataset.make_one_shot_iterator()
+    dataset, loaded_files = create_dataset(config, is_training=True)
+    iterator = tf.data.Iterator.from_structure(dataset.output_types)
+    init_train_iterator = iterator.make_initializer(dataset)
+    #iterator = dataset.make_one_shot_iterator()
     mel, onset_labels, frame_labels, weights = iterator.get_next()
     trainer = Trainer(
             config=config,
@@ -18,7 +20,14 @@ def main(config, args):
             onset_labels=onset_labels,
             frame_labels=frame_labels,
             weights=None)
-    trainer.train()
+    trainer.train(init_train_iterator)
+
+    #config['cache'] = '/home/sandervandenhaute/piano/test/'
+    #trainer.is_training = False
+    test_dataset, _ = create_dataset(config, is_training=False, except_files=loaded_files)
+    init_test_iterator = iterator.make_initializer(test_dataset)
+    #test_iterator = test_dataset.make_one_shot_iterator()
+    trainer.test(init_test_iterator)
 
 
 #    is_training = tf.placeholder(tf.bool)

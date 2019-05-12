@@ -11,7 +11,7 @@ from scipy.io.wavfile import read
 import tensorflow as tf
 
 
-def read_files(config):
+def read_files(config, except_files):
     '''
     Reads in text files in config['path'] and returns an (n, 2) ndarray
     with intervals and an (n,) ndarray with pitches in Hz
@@ -26,6 +26,7 @@ def read_files(config):
     dirs = config['dirs'] # list of names of subdirectories in MAPS dataset to be included
     file_list = []
     names = []
+    loaded_files = []
     for _ in dirs:
         path = os.path.join(config['path'], _, 'MUS')
         path = os.path.join(path, '*.wav')
@@ -37,14 +38,15 @@ def read_files(config):
             file_list.append((wav_file, txt_file))
         count = 0
         for i, pair in enumerate(file_list):
-            if count < config['files_to_load']:
+            if count < config['files_to_load'] and pair[0] not in except_files:
+                print(pair[0], except_files)
                 # load text
                 contents = np.loadtxt(pair[1], skiprows=1)
                 intervals = contents[:, :2]
                 pitches = midi_to_hz(contents[:, 2])
 
                 # load wav
-                print('processing file {}/{}'.format(i + 1, config['files_to_load']))
+                print('processing file {}/{}'.format(count + 1, config['files_to_load']))
                 y, sr = sf.read(pair[0])
                 y = librosa.core.resample(y.T, orig_sr=sr, target_sr=config['sample_rate']).T
                 if config['channels'] == 1:
@@ -53,10 +55,13 @@ def read_files(config):
                     print('DUAL CHANNEL NOT IMPLEMENTED')
                 base_name = os.path.basename(names[i])
                 data_list.append((mel.astype(np.float32), intervals.astype(np.float32), contents[:, 2].astype(np.float32), base_name))
+                loaded_files.append(pair[0])
+                count += 1
+            if pair[0] in except_files:
+                print('file skipped: ', pair[0])
 
                 # increase count
-                count += 1
-    return data_list
+    return data_list, loaded_files
 
 
 def test_mir_evaluations(config, ground_truth):

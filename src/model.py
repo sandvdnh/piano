@@ -13,7 +13,7 @@ class Trainer():
     '''
     trainer class for the neural network
     '''
-    def __init__(self, config, input_, onset_labels, frame_labels, weights=None):
+    def __init__(self, config, input_, onset_labels, frame_labels, weights=None, is_training=True):
         self.is_training = tf.placeholder(tf.bool)
         self.reset_state = tf.placeholder(tf.bool)
         self.model = Model(config, input_, self.is_training, self.reset_state)
@@ -38,7 +38,7 @@ class Trainer():
                 optimizer='Adam')
         self.accuracy = self._get_accuracy()
 
-    def train(self):
+    def train(self, init_train_iterator):
         '''
         trains
         '''
@@ -46,6 +46,7 @@ class Trainer():
         iters = self.model.config['iters']
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
+            sess.run(init_train_iterator)
             for i in range(iters):
                 _, loss_, accuracy, mel = sess.run([self.train_op, self.loss, self.accuracy, self.input_], feed_dict=feed)
                 if i % self.model.config['verbose'] == 0:
@@ -53,6 +54,25 @@ class Trainer():
                     print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
                     #print(sess.run(tf.trainable_variables()))
         return 0
+
+
+    def test(self, init_test_iterator):
+        '''
+        runs model on test data
+        '''
+        feed = {self.is_training: False, self.reset_state: False}
+        #iters = self.model.config['iters']
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(init_test_iterator)
+            iters = 1
+            for i in range(iters):
+                loss_, accuracy, mel = sess.run([self.loss, self.accuracy, self.input_], feed_dict=feed)
+                print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
+                #if i % self.model.config['verbose'] == 0:
+                    #accuracy = sess.run([self._get_accuracy()])
+                    #print(sess.run(tf.trainable_variables()))
+
 
 
     def _get_accuracy(self):

@@ -5,6 +5,7 @@ dirs:
     - ENSTDkAm
 path: /Users/sandervandenhaute/Documents/speech/piano/data/
 cache: /Users/sandervandenhaute/Documents/speech/piano/cache/
+test: /Users/sandervandenhaute/Documents/speech/piano/test/
 files_to_load: 1
 sample_rate: 16000
 spec_hop_length: 512
@@ -18,14 +19,14 @@ onset_slack: 50 # allowed slack in onset time (in ms)
 onset_length: 32 # minimum onset time
 length_slack_ms: 50 # allowed slack in note lengths (in ms)
 length_slack_percent: 20 # allowed slack in note lengths (in percentage)
-create_tfrecords: False
-batch_size: 2
+create_tfrecords: True
+batch_size: 1
 sequence_length: 20
 lstm_units: 128
 loss_epsilon: 1.0e-7
 learning_rate: 0.0006
 clip_norm: 3.0
 threshold: 0.5
-iters: 30
+iters: 1
 verbose: 1
 ...

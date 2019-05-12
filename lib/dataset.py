@@ -23,12 +23,15 @@ def wrap_bytes(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
-def to_tfrecords(config, entry):
+def to_tfrecords(config, entry, is_training):
     '''
     writes an entry to a tfrecords file stored in config['cache']/filename
     '''
     filename = entry['name'] + '.tfrecords'
-    path = os.path.join(config['cache'], filename)
+    if is_training:
+        path = os.path.join(config['cache'], filename)
+    else:
+        path = os.path.join(config['test'], filename)
     with tf.python_io.TFRecordWriter(path) as writer:
         # create dict
         data_dict = {
@@ -80,31 +83,38 @@ def _parser(record):
     return mel, onset_labels, frame_labels, weights
 
 
-def create_dataset(config):
+def create_dataset(config, is_training, except_files = []):
     '''
     returns a TFRecordDataset object from #(files_to_load) files from config['path']
     '''
     filenames = []
+    loaded_files = []
     if config['create_tfrecords']:
-        data_list = read_files(config)
+        data_list, loaded_files = read_files(config, except_files)
         for raw_entry in data_list:
             entry = create_data_entry(config, raw_entry)
-            filenames.append(to_tfrecords(config, entry))
+            filenames.append(to_tfrecords(config, entry, is_training))
     else:
-        path = os.path.join(config['cache'], '*.tfrecords')
+        if is_training:
+            path = os.path.join(config['cache'], '*.tfrecords')
+        else:
+            path = os.path.join(config['test'], '*.tfrecords')
         filenames = glob.glob(path)
         print('FOUND {} tfrecord files'.format(len(filenames)))
     if config['files_to_load']:
         print('LOADING only {} files'.format(config['files_to_load']))
         dataset = tf.data.TFRecordDataset(filenames[:config['files_to_load']])
+        #loaded_files = filenames[:config['files_to_load']]
     else:
         print('LOADING ALL files')
         dataset = tf.data.TFRecordDataset(filenames)
+        #loaded_files = filenames
     dataset = dataset.map(_parser)
     dataset = dataset.flat_map(lambda x, y, z, t: _minibatches(x, y, z, t, sequence_length=config['sequence_length']))
     dataset = dataset.batch(config['batch_size'], drop_remainder=True)
-    dataset = dataset.repeat()
-    return dataset
+    if is_training:
+        dataset = dataset.repeat()
+    return dataset, loaded_files
 
 
 def _minibatches(mel, onset_labels, frame_labels, weights, sequence_length):
