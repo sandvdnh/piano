@@ -65,7 +65,7 @@ class Trainer():
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(init_test_iterator)
-            iters = 1
+            iters = 4
             for i in range(iters):
                 loss_, accuracy, mel = sess.run([self.loss, self.accuracy, self.input_], feed_dict=feed)
                 print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)

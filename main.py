@@ -24,6 +24,7 @@ def main(config, args):
 
     #config['cache'] = '/home/sandervandenhaute/piano/test/'
     #trainer.is_training = False
+    config['create_tfrecords'] = False
     test_dataset, _ = create_dataset(config, is_training=False, except_files=loaded_files)
     init_test_iterator = iterator.make_initializer(test_dataset)
     #test_iterator = test_dataset.make_one_shot_iterator()

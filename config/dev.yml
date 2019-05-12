@@ -6,7 +6,7 @@ dirs:
 path: /Users/sandervandenhaute/Documents/speech/piano/data/
 cache: /Users/sandervandenhaute/Documents/speech/piano/cache/
 test: /Users/sandervandenhaute/Documents/speech/piano/test/
-files_to_load: 1
+files_to_load: -1.0
 sample_rate: 16000
 spec_hop_length: 512
 spec_fmin: 21
