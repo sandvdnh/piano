@@ -104,6 +104,7 @@ def create_dataset(config, is_training, except_files = []):
     if config['files_to_load'] > 0:
         print('LOADING only {} files'.format(config['files_to_load']))
         dataset = tf.data.TFRecordDataset(filenames[:config['files_to_load']])
+        print(filenames[:config['files_to_load']])
         #loaded_files = filenames[:config['files_to_load']]
     else:
         print('LOADING ALL files')

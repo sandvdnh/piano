@@ -14,6 +14,16 @@ def main(config, args):
     init_train_iterator = iterator.make_initializer(dataset)
     #iterator = dataset.make_one_shot_iterator()
     mel, onset_labels, frame_labels, weights = iterator.get_next()
+    #with tf.Session() as sess:
+    #    feed = {}
+    #    sess.run(tf.initializers.global_variables())
+    #    sess.run(init_train_iterator)
+    #    for i in range(1):
+    #        a, b, c, d = sess.run([mel, onset_labels, frame_labels, weights], feed_dict=feed)
+            #print('shape of mel after iterator: ', a.shape)
+            #print('first entry: ', a[0, 0, :, :, 0])
+            #print('shape of labels: ', c.shape)
+            #print('first entry: ', c[0, 0, :])
     trainer = Trainer(
             config=config,
             input_=mel,
@@ -22,12 +32,9 @@ def main(config, args):
             weights=None)
     trainer.train(init_train_iterator)
 
-    #config['cache'] = '/home/sandervandenhaute/piano/test/'
-    #trainer.is_training = False
     config['create_tfrecords'] = False
     test_dataset, _ = create_dataset(config, is_training=False, except_files=loaded_files)
     init_test_iterator = iterator.make_initializer(test_dataset)
-    #test_iterator = test_dataset.make_one_shot_iterator()
     trainer.test(init_test_iterator)
 
 

@@ -32,7 +32,8 @@ def onset(config, raw_data):
         start = int(np.argmax(frame_samples + config['n_fft'] / 2 > interval[0]))
         #stop = start + int(np.ceil(onset_lengths[i]))
         stop = int(np.argmax(frame_samples - config['n_fft'] / 2 > interval[0] + onset_lengths[i]))
-        onset_labels[int(pitches[i] - config['spec_fmin']), start:stop] = 1
+        #onset_labels[int(pitches[i] - config['spec_fmin']), start:stop] = 1
+        onset_labels[start:stop, int(pitches[i] - config['spec_fmin'])] = 1
     return onset_labels
 
 
@@ -40,6 +41,7 @@ def create_data_entry(config, raw_data):
     '''
     returns dictionary with preprocessed training data used to write tfrecords files
     '''
+    print('CREATING DATA ENTRY')
     onset_labels = onset(config, raw_data)
     frame_labels, weights = frame(config, raw_data)
 
@@ -95,9 +97,14 @@ def frame(config, raw_data):
     frame_samples = config['spec_hop_length'] * np.arange(1, n_frames + 1)
     # length of each note
     note_lengths = (intervals[:, 1] - intervals[:, 0])
+    starts = []
+    stops = []
     for i, interval in enumerate(intervals):
         start = int(np.argmax(frame_samples + config['n_fft'] / 2 > interval[0]))
+        starts.append(start)
         stop = int(np.argmax(frame_samples - config['n_fft'] / 2 > interval[1]))
-        frame_labels[int(pitches[i] - config['spec_fmin']), start:stop] = 1
+        stops.append(stop)
+        #frame_labels[int(pitches[i] - config['spec_fmin']), start:stop] = 1
+        frame_labels[start:stop, int(pitches[i] - config['spec_fmin'])] = 1
     return frame_labels, np.zeros(frame_labels.shape)
 

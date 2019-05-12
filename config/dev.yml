@@ -6,7 +6,7 @@ dirs:
 path: /Users/sandervandenhaute/Documents/speech/piano/data/
 cache: /Users/sandervandenhaute/Documents/speech/piano/cache/
 test: /Users/sandervandenhaute/Documents/speech/piano/test/
-files_to_load: -1.0
+files_to_load: 1
 sample_rate: 16000
 spec_hop_length: 512
 spec_fmin: 21
@@ -27,6 +27,6 @@ loss_epsilon: 1.0e-7
 learning_rate: 0.0006
 clip_norm: 3.0
 threshold: 0.5
-iters: 1
+iters: 10
 verbose: 1
 ...

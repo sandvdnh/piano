@@ -48,6 +48,7 @@ class Trainer():
         '''
         feed = {self.is_training: True, self.reset_state: False}
         iters = self.model.config['iters']
+        self.saver = tf.train.Saver()
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(init_train_iterator)
@@ -59,6 +60,7 @@ class Trainer():
                     print('mean frame output: ', np.mean(frame_output))
                     print('mean frame label: ', np.mean(frame_labels))
                     #print(sess.run(tf.trainable_variables()))
+            self.saver.save(sess, './tmp/model.ckpt')
         return 0
 
 
@@ -69,12 +71,16 @@ class Trainer():
         feed = {self.is_training: False, self.reset_state: False}
         #iters = self.model.config['iters']
         with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
+            self.saver.restore(sess, './tmp/model.ckpt')
+            print('MODEL RESTORED')
+            #sess.run(tf.global_variables_initializer())
             sess.run(init_test_iterator)
             iters = 4
             for i in range(iters):
-                loss_, accuracy, mel = sess.run([self.loss, self.accuracy, self.input_], feed_dict=feed)
+                loss_, accuracy, mel, frame_output, frame_labels = sess.run([self.loss, self.accuracy, self.input_, self.frame_output, self.frame_labels], feed_dict=feed)
                 print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
+                print('mean frame output: ', np.mean(frame_output))
+                print('mean frame label: ', np.mean(frame_labels))
                 #if i % self.model.config['verbose'] == 0:
                     #accuracy = sess.run([self._get_accuracy()])
                     #print(sess.run(tf.trainable_variables()))

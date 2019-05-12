@@ -3,6 +3,7 @@ data/*
 cache/*
 test/*
 logs/*
+tmp/*
 *.pdf
 config/*
 
@@ -10,3 +11,4 @@ config/*
 !data/readme
 !cache/readme
 !test/readme
+!tmp/readme
