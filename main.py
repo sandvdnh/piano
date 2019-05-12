@@ -68,7 +68,7 @@ def main(config, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', default='dev')
+    parser.add_argument('--config', default='dev1')
     args = parser.parse_args()
 
     # load config file

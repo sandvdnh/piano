@@ -29,13 +29,16 @@ class Trainer():
                 decay_steps=10000, # constant defined in hparams
                 decay_rate=0.98, # constant defined in hparams
                 staircase=True)
-        self.train_op = tf.contrib.layers.optimize_loss(
-                loss=self.loss,
-                global_step=tf.train.get_or_create_global_step(),
-                learning_rate=self.model.config['learning_rate'],
-                learning_rate_decay_fn=decay,
-                clip_gradients=self.model.config['clip_norm'],
-                optimizer='Adam')
+
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+            self.train_op = tf.contrib.layers.optimize_loss(
+                    loss=self.loss,
+                    global_step=tf.train.get_or_create_global_step(),
+                    learning_rate=self.model.config['learning_rate'],
+                    learning_rate_decay_fn=decay,
+                    clip_gradients=self.model.config['clip_norm'],
+                    optimizer='Adam')
         self.accuracy = self._get_accuracy()
 
     def train(self, init_train_iterator):
