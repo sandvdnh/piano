@@ -101,7 +101,7 @@ def create_dataset(config, is_training, except_files = []):
             path = os.path.join(config['test'], '*.tfrecords')
         filenames = glob.glob(path)
         print('FOUND {} tfrecord files'.format(len(filenames)))
-    if config['files_to_load']:
+    if config['files_to_load'] > 0:
         print('LOADING only {} files'.format(config['files_to_load']))
         dataset = tf.data.TFRecordDataset(filenames[:config['files_to_load']])
         #loaded_files = filenames[:config['files_to_load']]
