@@ -36,6 +36,7 @@ class Trainer():
                 learning_rate_decay_fn=decay,
                 clip_gradients=self.model.config['clip_norm'],
                 optimizer='Adam')
+        self.accuracy = self._get_accuracy()
 
     def train(self):
         '''
@@ -46,7 +47,7 @@ class Trainer():
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             for i in range(iters):
-                _, loss_, accuracy, mel = sess.run([self.train_op, self.loss, self._get_accuracy(), self.input_], feed_dict=feed)
+                _, loss_, accuracy, mel = sess.run([self.train_op, self.loss, self.accuracy, self.input_], feed_dict=feed)
                 if i % self.model.config['verbose'] == 0:
                     #accuracy = sess.run([self._get_accuracy()])
                     print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
