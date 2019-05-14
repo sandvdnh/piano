@@ -106,5 +106,7 @@ def frame(config, raw_data):
         stops.append(stop)
         #frame_labels[int(pitches[i] - config['spec_fmin']), start:stop] = 1
         frame_labels[start:stop, int(pitches[i] - config['spec_fmin'])] = 1
+        if i < 5:
+            print('index: ', i, ' start: ', start, ' stop: ', stop, ' pitch: ', pitches[i])
     return frame_labels, np.zeros(frame_labels.shape)
 

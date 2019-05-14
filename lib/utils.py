@@ -188,42 +188,68 @@ def plot_labels(result, config):
     to evaluate the performance of the model
     '''
     # first try on 1 sequence, then extend
-    frame_output = result['frame_output'][0][0]
-    frame_labels = result['frame_labels'][0][0]
+    frame_output_list = result['frame_output']
+    frame_labels_list = result['frame_labels']
+    batch_size = config['batch_size']
+    test_iters = config['test_iters']
+    sequence_length = config['sequence_length']
+    frame_labels = np.zeros((0, sequence_length, 88)) 
+    frame_output = np.zeros((0, sequence_length, 88)) 
+    for frame_label_ in frame_labels_list:
+        frame_labels = np.concatenate((frame_labels, frame_label_.copy()), axis=0)
+    frame_labels = np.reshape(frame_labels, (batch_size * test_iters * sequence_length, 88))
+    for frame_output_ in frame_output_list:
+        frame_output = np.concatenate((frame_output, frame_output_.copy()), axis=0)
+    frame_output = np.reshape(frame_output, (batch_size * test_iters * sequence_length, 88))
+
     #rows = frame_output.shape[0]
-    n = frame_output.shape[0]
+    #n = frame_output.shape[0]
+    n = frame_labels.shape[0]
+    x_axis = np.arange(n) * config['spec_hop_length'] / config['sample_rate']
     x_axis = np.arange(n)
 
     fig = plt.figure(figsize=(6, 6))
     ax0 = fig.add_subplot(111)
-    color = ['r', 'g']
-    print(frame_output)
+    color = ['k', 'g', 'r', 'k', 'cyan', 'm', 'y']
+    #frame_labels = frame_labels[:150, :]
     for i in range(88):
         values = i * (frame_output[:, i] > 1/2)
         #print(values)
-        x_, y_axis = _helper(x_axis, values)
-        ax0.plot(x_, y_axis + config['spec_fmin'], linewidth=2, color=color[0])
+        x_list, y_list = _helper(x_axis, values)
+        for i, x in enumerate(x_list):
+            ax0.plot(x, y_list[i] + config['spec_fmin'], linewidth=2, color=color[1], alpha=0.5)
         values = i * frame_labels[:, i]
         #print(values)
-        x_, y_axis = _helper(x_axis, values)
-        ax0.plot(x_, y_axis + config['spec_fmin'], linewidth=2, color=color[1])
+        x_list, y_list = _helper(x_axis, values)
+        for i, x in enumerate(x_list):
+            ax0.plot(x, y_list[i] + config['spec_fmin'], linewidth=2, color=color[0], alpha=0.5)
 
     ax0.yaxis.set_major_formatter(FormatStrFormatter('%g'))
     ax0.xaxis.set_major_formatter(FormatStrFormatter('%g'))
     ax0.get_yaxis().set_tick_params(which='both', direction='in')
     ax0.get_xaxis().set_tick_params(which='both', direction='in')
-    ax0.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax0.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax0.set_xlim([np.min(x_axis), np.max(x_axis)])
     ax0.set_ylim([0, 88])
-    #ax0.legend()
     fig.savefig('./tmp/' + config['name'] + '.pdf', bbox_inches='tight')
     return 0
 
 def _helper(x_axis, values):
     indices = np.where(values)[0]
-    x_ = x_axis[indices]
-    y_axis = values[indices]
-    return x_, y_axis
+    x_list = []
+    y_list = []
+    if len(indices) > 0:
+        original = indices.copy()
+        while len(original) > 0:
+            indices = original
+            while indices[-1] - indices[0] + 1 != len(indices):
+                indices = indices[:-1]
+            original = original[len(indices):]
+            x_ = x_axis[indices]
+            y_axis = values[indices]
+            x_list.append(x_)
+            y_list.append(y_axis)
+    return x_list, y_list
 
 def accuracy_without_true_negatives(true_positives, false_positives, false_negatives):
     return tf.where(

@@ -36,7 +36,6 @@ def main(config, args):
     config['create_tfrecords'] = False
     test_dataset, _ = create_dataset(config, is_training=False, except_files=loaded_files)
     init_test_iterator = iterator.make_initializer(test_dataset)
-    iters = 1
     result = trainer.test(init_test_iterator, cache_output=True)
     plot_labels(result, config)
 
