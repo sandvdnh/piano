@@ -20,13 +20,16 @@ onset_length: 32 # minimum onset time
 length_slack_ms: 50 # allowed slack in note lengths (in ms)
 length_slack_percent: 20 # allowed slack in note lengths (in percentage)
 create_tfrecords: False
-batch_size: 1
-sequence_length: 20
+batch_size: 2
+sequence_length: 60
 lstm_units: 128
 loss_epsilon: 1.0e-7
 learning_rate: 0.0006
 clip_norm: 3.0
 threshold: 0.5
-iters: 10
+iters: 30
+test_iters: 5
 verbose: 1
+
+plot_duration: 10
 ...

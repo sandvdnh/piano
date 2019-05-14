@@ -3,6 +3,9 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
+from matplotlib.ticker import MaxNLocator
 import glob
 import os
 import librosa
@@ -167,7 +170,6 @@ def frame_metrics(frame_labels, frame_predictions):
             'f1_score': frame_f1_score,
             }
 
-
 def f1_score(precision, recall):
     """
     Creates an op for calculating the F1 score.
@@ -180,6 +182,48 @@ def f1_score(precision, recall):
     return tf.where(
             tf.greater(precision + recall, 0), 2 * ((precision * recall) / (precision + recall)), 0)
 
+def plot_labels(result, config):
+    '''
+    function that generates an output image of part of the output
+    to evaluate the performance of the model
+    '''
+    # first try on 1 sequence, then extend
+    frame_output = result['frame_output'][0][0]
+    frame_labels = result['frame_labels'][0][0]
+    #rows = frame_output.shape[0]
+    n = frame_output.shape[0]
+    x_axis = np.arange(n)
+
+    fig = plt.figure(figsize=(6, 6))
+    ax0 = fig.add_subplot(111)
+    color = ['r', 'g']
+    print(frame_output)
+    for i in range(88):
+        values = i * (frame_output[:, i] > 1/2)
+        #print(values)
+        x_, y_axis = _helper(x_axis, values)
+        ax0.plot(x_, y_axis + config['spec_fmin'], linewidth=2, color=color[0])
+        values = i * frame_labels[:, i]
+        #print(values)
+        x_, y_axis = _helper(x_axis, values)
+        ax0.plot(x_, y_axis + config['spec_fmin'], linewidth=2, color=color[1])
+
+    ax0.yaxis.set_major_formatter(FormatStrFormatter('%g'))
+    ax0.xaxis.set_major_formatter(FormatStrFormatter('%g'))
+    ax0.get_yaxis().set_tick_params(which='both', direction='in')
+    ax0.get_xaxis().set_tick_params(which='both', direction='in')
+    ax0.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax0.set_xlim([np.min(x_axis), np.max(x_axis)])
+    ax0.set_ylim([0, 88])
+    #ax0.legend()
+    fig.savefig('./tmp/' + config['name'] + '.pdf', bbox_inches='tight')
+    return 0
+
+def _helper(x_axis, values):
+    indices = np.where(values)[0]
+    x_ = x_axis[indices]
+    y_axis = values[indices]
+    return x_, y_axis
 
 def accuracy_without_true_negatives(true_positives, false_positives, false_negatives):
     return tf.where(

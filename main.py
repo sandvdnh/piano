@@ -3,6 +3,7 @@ import os
 import yaml
 import numpy as np
 from lib.dataset import create_dataset
+from lib.utils import plot_labels
 from src.model import Model
 from src.model import Trainer
 import tensorflow as tf
@@ -30,12 +31,14 @@ def main(config, args):
             onset_labels=onset_labels,
             frame_labels=frame_labels,
             weights=None)
-    trainer.train(init_train_iterator)
+    #trainer.train(init_train_iterator)
 
     config['create_tfrecords'] = False
     test_dataset, _ = create_dataset(config, is_training=False, except_files=loaded_files)
     init_test_iterator = iterator.make_initializer(test_dataset)
-    trainer.test(init_test_iterator)
+    iters = 1
+    result = trainer.test(init_test_iterator, cache_output=True)
+    plot_labels(result, config)
 
 
 #    is_training = tf.placeholder(tf.bool)

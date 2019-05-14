@@ -6,6 +6,7 @@ import numpy as np
 import os
 import glob
 from lib.utils import frame_metrics
+from lib.utils import plot_labels
 import functools
 import tensorflow as tf
 #from mir_eval.multipitch import metrics
@@ -25,6 +26,7 @@ class Trainer():
         self.frame_labels = frame_labels
         self.weights = weights
         self.loss = self._get_losses()
+        self.saver = tf.train.Saver()
         decay = functools.partial(
                 tf.train.exponential_decay,
                 decay_steps=10000, # constant defined in hparams
@@ -48,7 +50,6 @@ class Trainer():
         '''
         feed = {self.is_training: True, self.reset_state: False}
         iters = self.model.config['iters']
-        self.saver = tf.train.Saver()
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(init_train_iterator)
@@ -65,27 +66,35 @@ class Trainer():
         return 0
 
 
-    def test(self, init_test_iterator):
+    def test(self, init_test_iterator, cache_output=False):
         '''
         runs model on test data
         '''
         feed = {self.is_training: False, self.reset_state: False}
-        #iters = self.model.config['iters']
+        iters = self.model.config['test_iters']
+        if cache_output: #
+            result = {
+                    'frame_labels': [],
+                    'frame_output': []
+                    }
         with tf.Session() as sess:
             self.saver.restore(sess, './tmp/model.ckpt')
             print('MODEL RESTORED')
             #sess.run(tf.global_variables_initializer())
             sess.run(init_test_iterator)
-            iters = 4
             for i in range(iters):
                 loss_, accuracy, mel, frame_output, frame_labels = sess.run([self.loss, self.accuracy, self.input_, self.frame_output, self.frame_labels], feed_dict=feed)
                 print('{}/{}'.format(i, iters), '  loss:  ', loss_, '  accuracy:  ', accuracy)
                 print('mean frame output: ', np.mean(frame_output))
                 print('mean frame label: ', np.mean(frame_labels))
+                if cache_output:
+                    result['frame_labels'].append(frame_labels.copy())
+                    result['frame_output'].append(frame_output.copy())
                 #if i % self.model.config['verbose'] == 0:
                     #accuracy = sess.run([self._get_accuracy()])
                     #print(sess.run(tf.trainable_variables()))
-
+        if cache_output:
+            return result
 
 
     def _get_accuracy(self):
