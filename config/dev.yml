@@ -28,7 +28,7 @@ learning_rate: 0.0006
 clip_norm: 3.0
 threshold: 0.5
 iters: 30
-test_iters: 2
+test_iters: 4
 verbose: 1
 
 plot_duration: 10

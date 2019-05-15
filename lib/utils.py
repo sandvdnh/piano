@@ -193,7 +193,7 @@ def plot_labels(result, config):
     batch_size = config['batch_size']
     test_iters = config['test_iters']
     sequence_length = config['sequence_length']
-    frame_labels = np.zeros((0, sequence_length, 88)) 
+    frame_labels = np.ones((0, sequence_length, 88)) 
     frame_output = np.zeros((0, sequence_length, 88)) 
     for frame_label_ in frame_labels_list:
         frame_labels = np.concatenate((frame_labels, frame_label_.copy()), axis=0)
@@ -202,27 +202,38 @@ def plot_labels(result, config):
         frame_output = np.concatenate((frame_output, frame_output_.copy()), axis=0)
     frame_output = np.reshape(frame_output, (batch_size * test_iters * sequence_length, 88))
 
+    frame_output *= 2 
     #rows = frame_output.shape[0]
     #n = frame_output.shape[0]
     n = frame_labels.shape[0]
     x_axis = np.arange(n) * config['spec_hop_length'] / config['sample_rate']
-    x_axis = np.arange(n)
+    #x_axis = np.arange(n)
 
-    fig = plt.figure(figsize=(6, 6))
+    fig = plt.figure(figsize=(3.5, 2.4))
     ax0 = fig.add_subplot(111)
     color = ['k', 'g', 'r', 'k', 'cyan', 'm', 'y']
     #frame_labels = frame_labels[:150, :]
-    for i in range(88):
-        values = i * (frame_output[:, i] > 1/2)
+    for k in range(88):
+        values = k * (frame_output[:, k] > 1/2)
+        pos = np.where(np.abs(np.diff(values)) > 1)[0]
+        values = values.astype(np.float32)
+        if len(pos) > 0:
+            values[pos] = float('NaN')
+        ax0.plot(x_axis, values + config['spec_fmin'], linewidth=2, color=color[1], alpha=0.8)
         #print(values)
-        x_list, y_list = _helper(x_axis, values)
-        for i, x in enumerate(x_list):
-            ax0.plot(x, y_list[i] + config['spec_fmin'], linewidth=2, color=color[1], alpha=0.5)
-        values = i * frame_labels[:, i]
+        #x_list, y_list = _helper(x_axis, values)
+        #for i, x in enumerate(x_list):
+        #    ax0.plot(x, y_list[i] + config['spec_fmin'], linewidth=2, color=color[1], alpha=0.5)
+        values = k * (frame_labels[:, k] > 1/2)
+        pos = np.where(np.abs(np.diff(values)) > 1)[0]
+        values = values.astype(np.float32)
+        if len(pos) > 0:
+            values[pos] = float('NaN')
+        ax0.plot(x_axis, values + config['spec_fmin'], linewidth=2, color=color[0], alpha=0.4)
         #print(values)
-        x_list, y_list = _helper(x_axis, values)
-        for i, x in enumerate(x_list):
-            ax0.plot(x, y_list[i] + config['spec_fmin'], linewidth=2, color=color[0], alpha=0.5)
+        #x_list, y_list = _helper(x_axis, values)
+        #for i, x in enumerate(x_list):
+        #    ax0.plot(x, y_list[i] + config['spec_fmin'], linewidth=2, color=color[0], alpha=0.5)
 
     ax0.yaxis.set_major_formatter(FormatStrFormatter('%g'))
     ax0.xaxis.set_major_formatter(FormatStrFormatter('%g'))
@@ -231,6 +242,9 @@ def plot_labels(result, config):
     ax0.yaxis.set_major_locator(MaxNLocator(integer=True))
     ax0.set_xlim([np.min(x_axis), np.max(x_axis)])
     ax0.set_ylim([0, 88])
+    ax0.set_xlabel('Time [s]')
+    ax0.set_ylabel('MIDI note')
+    fig.savefig('./tmp/' + config['name'] + '.pgf', bbox_inches='tight')
     fig.savefig('./tmp/' + config['name'] + '.pdf', bbox_inches='tight')
     return 0
 
@@ -250,6 +264,47 @@ def _helper(x_axis, values):
             x_list.append(x_)
             y_list.append(y_axis)
     return x_list, y_list
+
+def __helper(x_axis, values):
+    '''
+    identifies groups, returns them as list
+    '''
+    i = 0
+    x_list = []
+    y_list = []
+    indices = []
+    new = True
+    start = 0
+    previous_length = 1
+    while i < 50:
+        #print(i)
+        #start = i - len(indices)
+        i += 1
+        count = np.count_nonzero(values[start:i])
+        if count > 0 and new:
+            #print(indices)
+            print(count)
+            print('new group at ', i)
+            print(values[i-1:i+4])
+            start = i - 1
+            previous_length = 1
+            new = False
+        else:
+            if count == previous_length + 1:
+                print(count)
+                previous_length += 1
+            elif count == previous_length:
+                stop = i - 1
+                x_list.append(x_axis[start:stop])
+                y_list.append(values[start:stop]) 
+                new = True
+                start = i
+        #print(start, i, previous_length, values[start:i + 1])
+    #print('DONE')
+    return x_list, y_list
+
+
+
 
 def accuracy_without_true_negatives(true_positives, false_positives, false_negatives):
     return tf.where(
